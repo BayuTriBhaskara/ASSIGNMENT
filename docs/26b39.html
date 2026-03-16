@@ -1,0 +1,22 @@
+<meta charset="UTF-8">
+<div id="container"><div>
+
+<script src="26b39.js"></script>
+
+<script>
+// Instantiate container and output textarea
+let cnt = getContainer("container");
+let txa = createTextarea("text-output");
+
+// Append textarea to container
+cnt.append(txa);
+
+// Bind consolex output to textarea
+consolex.setOutput(txa);
+
+// Emit test log entries
+consolex.log("Hello, World!", "Nice to meet you.");
+consolex.log("You can call me Bayu");
+consolex.log("I'm new to this kind of thing\nSo please\nbe Patient \with me.");
+consolex.log("😃");
+</script>

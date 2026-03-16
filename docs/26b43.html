@@ -1,0 +1,114 @@
+<meta charset="UTF-8">
+<div id="container"><div>
+
+
+<script src="26b39.js"></script>
+<script src="26b41.js"></script>
+<script src="26b43.js"></script>
+
+<script>
+// Instantiate containers, output textarea, and buttons
+const cnt = getContainer("container");
+const inTxa = createTextarea("text-input");
+const outTxa = createTextarea("text-output");
+const btnDiv = createDiv("button-container");
+const deBtn = createButton("de-button", "Show Menu");
+const owBtn = createButton("ow-button", "Order All");
+const coBtn = createButton("co-button", "Clear Order");
+const ciBtn = createButton("ci-button", "Clear Menu");
+const ppBtn = createButton("pp-button", "Add to Order");
+const inpField = createInput("item-input", "Type food item here...");
+const orBtn = createButton("or-button", "Order Item");
+const pizzaBtn = createButton("pizza-btn", "🍕");
+const burgerBtn = createButton("burger-btn", "🍔");
+const tacoBtn = createButton("taco-btn", "🌮");
+const sushiBtn = createButton("sushi-btn", "🍣");
+const noodleBtn = createButton("noodle-btn", "🍜");
+const chickenBtn = createButton("chicken-btn", "🍗");
+const cupcakeBtn = createButton("cupcake-btn", "🧁");
+
+// Append textarea to container
+cnt.append(inTxa);
+cnt.append(btnDiv);
+cnt.append(outTxa);
+btnDiv.append(ciBtn);
+btnDiv.append(coBtn);
+btnDiv.append(deBtn);
+btnDiv.append(owBtn);
+btnDiv.append(ppBtn);
+btnDiv.append(inpField);
+btnDiv.append(orBtn);
+btnDiv.append(pizzaBtn);
+btnDiv.append(burgerBtn);
+btnDiv.append(tacoBtn);
+btnDiv.append(sushiBtn);
+btnDiv.append(noodleBtn);
+btnDiv.append(chickenBtn);
+btnDiv.append(cupcakeBtn);
+// Change elements flex value
+changeElementsFlex(
+  ["text-input", "3"],
+  ["button-container", "3"] ,
+  ["text-output", "3"],
+);
+
+// Bind consolex output to textarea and set EOL character
+consolex.setOutput(outTxa);
+consolex.setEOL("");
+
+// Set onclick event to each button
+ciBtn.addEventListener("click", () => {
+  clearTextarea("text-input");
+});
+coBtn.addEventListener("click", () => {
+  clearTextarea("text-output");
+});
+deBtn.addEventListener("click", () => {
+inTxa.value = "🍕 Pizza";
+inTxa.value += "\n" + "🍔 Burger";
+inTxa.value += "\n" + "🌮 Taco";
+inTxa.value += "\n" + "🍣 Sushi";
+inTxa.value += "\n" + "🍜 Noodles";
+inTxa.value += "\n" + "🍗 Fried Chicken";
+inTxa.value += "\n" + "🧁 Cupcake";
+});
+owBtn.addEventListener("click", () => {
+  copyTextareaFromTo("text-input", "text-output");
+});
+pizzaBtn.addEventListener("click", () => {inpField.value += "🍕";});
+burgerBtn.addEventListener("click", () => {inpField.value += "🍔";});
+tacoBtn.addEventListener("click", () => {inpField.value += "🌮";});
+sushiBtn.addEventListener("click", () => {inpField.value += "🍣";});
+noodleBtn.addEventListener("click", () => {inpField.value += "🍜";});
+chickenBtn.addEventListener("click", () => {inpField.value += "🍗";});
+cupcakeBtn.addEventListener("click", () => {inpField.value += "🧁";});
+orBtn.addEventListener("click", () => {
+  let item = inpField.value.trim();
+  if(item.length > 0) {
+    let outLines = outTxa.value.split("\n");
+    if(outLines.length == 1 && outLines[0] == "") {
+      outLines = [];
+    }
+    outLines.push("✅ " + item);
+    outTxa.value = outLines.join("\n");
+    outTxa.scrollTop = outTxa.scrollHeight;
+    inpField.value = "";
+  }
+});
+function createInput(id, placeholder) {
+  const el = document.createElement("input");
+  el.id = id;
+  el.type = "text";
+  el.placeholder = placeholder;
+  const styles = {
+    display: "block",
+    width: "100%",
+    boxSizing: "border-box",
+    fontFamily: "monospace",
+    fontSize: "12px",
+    padding: "0.25em 0.5em",
+  };
+  Object.assign(el.style, styles);
+  return el;
+}
+</script>

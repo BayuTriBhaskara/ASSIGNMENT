@@ -1,0 +1,46 @@
+<meta charset="UTF-8">
+<div id="container"><div>
+
+<script src="26b39.js"></script>
+<script src="26b41.js"></script>
+
+<script>
+// Instantiate containers, output textarea, and buttons
+const cnt = getContainer("container");
+const txa = createTextarea("text-output");
+const btnDiv = createDiv("button-container");
+const oBtn = createButton("o-button", "Pizza");
+const rBtn = createButton("r-button", "Burger");
+const sBtn = createButton("s-button", "Taco");
+const tBtn = createButton("t-button", "Sushi");
+const xBtn = createButton("x-button", "Newline");
+
+// Append textarea to container
+cnt.append(txa);
+cnt.append(btnDiv);
+btnDiv.append(oBtn);
+btnDiv.append(rBtn);
+btnDiv.append(sBtn);
+btnDiv.append(tBtn);
+btnDiv.append(xBtn);
+
+// Change elements flex value
+changeElementsFlex(
+  ["text-output", "3"],
+  ["button-container", "1"]
+);
+
+// Bind consolex output to textarea and set EOL character
+consolex.setOutput(txa);
+consolex.setEOL("");
+
+// Define list of animal icons
+const animals = ["🍕", "🍔", "🌮", "🍣"];
+
+// Set onclick event to each button
+oBtn.addEventListener("click", () => {consolex.log(animals[0]);});
+rBtn.addEventListener("click", () => {consolex.log(animals[1]);});
+sBtn.addEventListener("click", () => {consolex.log(animals[2]);});
+tBtn.addEventListener("click", () => {consolex.log(animals[3]);});
+xBtn.addEventListener("click", () => {consolex.log("\n");});
+</script>
