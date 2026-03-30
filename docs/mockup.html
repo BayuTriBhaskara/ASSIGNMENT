@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mockup - Kalkulator Anomali Gravitasi & Bouguer</title>
+  <style>
+    body { font-family: monospace; margin: 20px; background: #fff; color: #000; }
+    h1 { font-size: 1.2em; }
+    h2 { font-size: 1em; margin-top: 20px; border-bottom: 1px solid #000; }
+    h3 { font-size: 0.95em; margin-top: 15px; }
+    label { display: block; margin-top: 8px; font-size: 0.9em; }
+    input[type="number"], input[type="text"], textarea {
+      width: 100%; box-sizing: border-box; font-family: monospace;
+      font-size: 0.9em; padding: 3px; margin-top: 2px;
+      border: 1px solid #000;
+    }
+    textarea { resize: vertical; }
+    button {
+      margin: 4px 4px 4px 0; padding: 4px 10px;
+      font-family: monospace; font-size: 0.9em;
+      border: 1px solid #000; background: #eee;
+      cursor: pointer;
+    }
+    button:hover { background: #ddd; }
+    canvas { border: 1px solid #000; display: block; margin-top: 8px; }
+    .row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .col { flex: 1; min-width: 250px; }
+    .note { font-size: 0.8em; color: #555; margin-top: 4px; }
+    .section { margin-bottom: 20px; }
+    .btn-group { margin-top: 10px; }
+    p { font-size: 0.9em; line-height: 1.6; }
+    ul { font-size: 0.9em; line-height: 1.8; }
+  </style>
+</head>
+<body>
+
+<h1>Kalkulator Anomali Gravitasi & Bouguer</h1>
+<p class="note">Mockup aplikasi web | Bayu Tri Bhaskara | Tugas Komputasi</p>
+
+<hr>
+
+<!-- ============ INPUT ============ -->
+<h2>1. Input</h2>
+
+<div class="row">
+  <div class="col">
+    <h3>Data Stasiun Pengukuran</h3>
+
+    <label>ID Stasiun</label>
+    <input type="text" placeholder="contoh: STA-01">
+
+    <label>Lintang (°)</label>
+    <input type="number" placeholder="contoh: -6.9175" step="0.0001">
+
+    <label>Bujur (°)</label>
+    <input type="number" placeholder="contoh: 107.6191" step="0.0001">
+
+    <label>Elevasi Stasiun (m)</label>
+    <input type="number" placeholder="contoh: 768" step="0.1">
+
+    <label>Pengukuran Gravitasi Mentah (mGal)</label>
+    <input type="number" placeholder="contoh: 978050.25" step="0.01">
+
+    <label>Gravitasi Referensi / Base Station (mGal)</label>
+    <input type="number" placeholder="contoh: 978032.67" step="0.01">
+  </div>
+
+  <div class="col">
+    <h3>Parameter Koreksi</h3>
+
+    <label>Densitas Batuan (kg/m³)</label>
+    <input type="number" placeholder="contoh: 2670" step="1">
+
+    <label>Densitas Udara (kg/m³)</label>
+    <input type="number" placeholder="contoh: 1.225" step="0.001">
+
+    <label>Model Ellipsoid Referensi</label>
+    <input type="text" placeholder="contoh: GRS80 atau WGS84">
+
+    <label>Koreksi Terrain (mGal) — opsional</label>
+    <input type="number" placeholder="contoh: 0.032" step="0.001">
+
+    <label>Data Terrain Grid (CSV per baris: x,y,z)</label>
+    <textarea rows="5" placeholder="contoh:
+0,0,768
+100,0,772
+200,0,765
+0,100,770"></textarea>
+  </div>
+</div>
+
+<div class="col" style="margin-top:10px;">
+  <label>Catatan / Keterangan Lokasi</label>
+  <textarea rows="3" placeholder="Tulis catatan tentang kondisi lapangan, cuaca, dsb."></textarea>
+</div>
+
+<!-- ============ BUTTON ============ -->
+<h2>2. Proses</h2>
+<p class="note">Tombol-tombol di bawah merepresentasikan tahapan komputasi yang dibutuhkan:</p>
+
+<div class="btn-group">
+  <button>1. Hitung Gravitasi Normal (γ)</button>
+  <button>2. Hitung Koreksi Free-Air</button>
+  <button>3. Hitung Koreksi Bouguer</button>
+  <button>4. Hitung Koreksi Terrain</button>
+  <button>5. Hitung Anomali Free-Air</button>
+  <button>6. Hitung Anomali Bouguer Sederhana</button>
+  <button>7. Hitung Anomali Bouguer Lengkap</button>
+  <button>8. Hitung Anomali Residual</button>
+  <button>9. Normalisasi Data</button>
+  <button>10. Interpolasi Grid</button>
+  <button>11. Buat Peta Kontur</button>
+  <button>12. Hitung Kontras Densitas</button>
+  <button>13. Estimasi Kedalaman Anomali</button>
+  <button>14. Reset Semua</button>
+  <button>15. Ekspor Hasil (CSV)</button>
+</div>
+
+<!-- ============ OUTPUT ============ -->
+<h2>3. Output</h2>
+
+<div class="row">
+  <div class="col">
+    <h3>Hasil Perhitungan (Teks)</h3>
+    <textarea rows="12" placeholder="Hasil akan muncul di sini setelah tombol proses diklik...
+contoh:
+Gravitasi Normal (γ)    : 978031.85 mGal
+Koreksi Free-Air        : +1.456 mGal
+Koreksi Bouguer         : -0.872 mGal
+Koreksi Terrain         : +0.032 mGal
+Anomali Free-Air        : +18.40 mGal
+Anomali Bouguer Sederh. : -12.30 mGal
+Anomali Bouguer Lengkap : -12.27 mGal
+Anomali Residual        : -4.15 mGal
+Kontras Densitas        : 320 kg/m³
+Estimasi Kedalaman      : 1.2 km" readonly></textarea>
+
+    <h3>Log Proses</h3>
+    <textarea rows="6" placeholder="Log langkah komputasi akan muncul di sini...
+[1] Menghitung gravitasi normal menggunakan formula GRS80...
+[2] Menerapkan koreksi free-air: FA = 0.3086 × h...
+[3] dst." readonly></textarea>
+  </div>
+
+  <div class="col">
+    <h3>Visualisasi — Peta Anomali Bouguer</h3>
+    <canvas width="350" height="250"></canvas>
+    <p class="note">Canvas akan menampilkan peta kontur anomali Bouguer berdasarkan grid data terrain.</p>
+
+    <h3>Visualisasi — Profil Anomali</h3>
+    <canvas width="350" height="180"></canvas>
+    <p class="note">Canvas akan menampilkan grafik profil anomali gravitasi vs. jarak stasiun.</p>
+  </div>
+</div>
+
+<hr>
+
+<!-- ============ DESKRIPSI ============ -->
+<h2>4. Deskripsi Aplikasi</h2>
+
+<p>
+  Aplikasi web ini adalah <strong>Kalkulator Anomali Gravitasi & Bouguer</strong> berbasis browser
+  yang membantu ahli geofisika dan mahasiswa untuk memproses data survei gravitasi lapangan.
+  Aplikasi ini menerapkan koreksi-koreksi standar geofisika berdasarkan fisika gravitasi Newton
+  untuk mengisolasi anomali densitas bawah permukaan, yang berguna untuk studi baseline AMDAL,
+  eksplorasi mineral, dan pemetaan air tanah.
+</p>
+
+<h3>Cara Menggunakan Input:</h3>
+<ul>
+  <li><strong>ID Stasiun, Lintang, Bujur</strong> — identitas dan posisi geografis titik pengukuran di lapangan.</li>
+  <li><strong>Elevasi Stasiun (m)</strong> — ketinggian stasiun di atas permukaan laut, diperlukan untuk koreksi free-air dan Bouguer.</li>
+  <li><strong>Gravitasi Mentah (mGal)</strong> — nilai gravitasi yang diukur langsung menggunakan gravimeter di lapangan.</li>
+  <li><strong>Gravitasi Referensi (mGal)</strong> — nilai gravitasi di base station yang digunakan sebagai acuan pengukuran relatif.</li>
+  <li><strong>Densitas Batuan (kg/m³)</strong> — densitas rata-rata batuan di area survei, biasanya diasumsikan 2670 kg/m³ (densitas rata-rata kerak).</li>
+  <li><strong>Model Ellipsoid</strong> — model bumi referensi yang digunakan untuk menghitung gravitasi normal teoretis (GRS80 atau WGS84).</li>
+  <li><strong>Koreksi Terrain</strong> — koreksi tambahan untuk memperhitungkan topografi tidak rata di sekitar stasiun.</li>
+  <li><strong>Data Terrain Grid (CSV)</strong> — data elevasi grid area survei untuk membuat peta kontur dan koreksi terrain otomatis.</li>
+  <li><strong>Catatan Lokasi</strong> — informasi kondisi lapangan yang relevan untuk dokumentasi.</li>
+</ul>
+
+<h3>Cara Menggunakan Tombol:</h3>
+<ul>
+  <li>Klik tombol secara berurutan dari 1 sampai 13 untuk melakukan komputasi tahap demi tahap.</li>
+  <li>Setiap tombol mewakili satu langkah koreksi atau kalkulasi dalam alur pemrosesan data gravitasi.</li>
+  <li>Tombol 14 (Reset) akan menghapus semua input dan output.</li>
+  <li>Tombol 15 (Ekspor CSV) akan mengunduh hasil perhitungan dalam format spreadsheet.</li>
+</ul>
+
+<h3>Cara Membaca Output:</h3>
+<ul>
+  <li><strong>Textarea Hasil Perhitungan</strong> — menampilkan nilai numerik dari setiap koreksi dan anomali yang dihitung.</li>
+  <li><strong>Log Proses</strong> — menampilkan langkah-langkah komputasi secara berurutan agar pengguna dapat mengikuti alur kalkulasi.</li>
+  <li><strong>Peta Anomali Bouguer (Canvas)</strong> — visualisasi 2D berupa peta kontur yang menunjukkan distribusi spasial anomali Bouguer di area survei.</li>
+  <li><strong>Profil Anomali (Canvas)</strong> — grafik garis yang menampilkan nilai anomali gravitasi sepanjang lintasan survei.</li>
+</ul>
+
+<hr>
+
+<!-- ============ KONSEP NUMERIK ============ -->
+<h2>5. Konsep Numerik dan Algoritma</h2>
+
+<h3>A. Gravitasi Normal (γ) — Formula GRS80</h3>
+<p>
+  Gravitasi normal dihitung berdasarkan lintang stasiun menggunakan formula internasional
+  Geodetic Reference System 1980 (GRS80):
+</p>
+<p><code>γ = 978032.67714 × (1 + 0.00193185138639 × sin²φ) / √(1 − 0.00669437999014 × sin²φ)</code></p>
+<p>
+  di mana φ adalah lintang geografis stasiun. Formula ini menghasilkan nilai gravitasi teoritis
+  pada permukaan ellipsoid referensi.
+</p>
+
+<h3>B. Koreksi Free-Air (FA)</h3>
+<p>
+  Koreksi free-air memperhitungkan perbedaan elevasi stasiun terhadap ellipsoid referensi,
+  menggunakan pendekatan gradien gravitasi vertikal:
+</p>
+<p><code>FA = 0.3086 × h</code></p>
+<p>
+  di mana h adalah elevasi stasiun dalam meter. Koreksi ini bernilai positif karena gravitasi
+  berkurang seiring bertambahnya ketinggian.
+</p>
+
+<h3>C. Koreksi Bouguer (B)</h3>
+<p>
+  Koreksi Bouguer memperhitungkan efek massa batuan yang berada di antara stasiun dan
+  ellipsoid referensi, dimodelkan sebagai slab horizontal tak terbatas:
+</p>
+<p><code>B = 2π × G × ρ × h = 0.04193 × ρ × h</code></p>
+<p>
+  di mana G adalah konstanta gravitasi universal (6.674×10⁻¹¹ m³/kg/s²), ρ adalah densitas
+  batuan (kg/m³), dan h adalah elevasi (m).
+</p>
+
+<h3>D. Anomali Free-Air dan Bouguer</h3>
+<p>Anomali dihitung sebagai selisih antara gravitasi terukur dengan gravitasi teoritis setelah koreksi:</p>
+<p><code>Anomali Free-Air = g_terukur − γ + FA</code></p>
+<p><code>Anomali Bouguer Sederhana = g_terukur − γ + FA − B</code></p>
+<p><code>Anomali Bouguer Lengkap = Anomali Bouguer Sederhana + Koreksi Terrain</code></p>
+
+<h3>E. Interpolasi Grid — Metode Bilinear</h3>
+<p>
+  Untuk menghasilkan peta kontur dari data titik-titik pengukuran yang tersebar tidak merata,
+  digunakan interpolasi bilinear pada grid reguler. Nilai z pada titik (x, y) dihitung dari
+  empat titik data terdekat dengan pembobotan berdasarkan jarak.
+  Algoritma ini beroperasi dalam O(n) untuk setiap titik grid.
+</p>
+
+<h3>F. Visualisasi Kontur — Marching Squares</h3>
+<p>
+  Peta kontur pada canvas dihasilkan menggunakan algoritma <em>Marching Squares</em>,
+  yang memindai setiap sel grid 2×2 dan menentukan bagaimana garis kontur melewati sel tersebut
+  berdasarkan 16 kemungkinan kombinasi nilai di atas/di bawah threshold. Hasilnya adalah
+  garis-garis kontur yang halus merepresentasikan distribusi anomali gravitasi.
+</p>
+
+<h3>G. Estimasi Kedalaman — Half-Width Method</h3>
+<p>
+  Kedalaman sumber anomali diestimasi menggunakan metode half-width, di mana kedalaman (z)
+  diperkirakan sama dengan jarak horizontal dari puncak anomali ke titik di mana
+  nilai anomali turun menjadi setengah dari nilai maksimumnya:
+</p>
+<p><code>z ≈ x½</code></p>
+<p>
+  Metode ini berlaku untuk anomali berbentuk bola atau silinder dan merupakan pendekatan
+  cepat sebelum dilakukan inversi penuh.
+</p>
+
+<hr>
+<p class="note">Bayu Tri Bhaskara | Aplikasi web AMDAL & Geofisika | 2026</p>
+
+</body>
+</html>
