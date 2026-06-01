@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gravity & Bouguer Anomaly Calculator</title>
+  <style>
+    body { font-family: monospace; font-size: 12px; margin: 20px; background: #fff; }
+    .page-title { font-size: 1.3em; font-weight: bold; margin-bottom: 2px; }
+    .subtitle { color: #555; margin-bottom: 12px; font-size: 11px; }
+    .panels-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; }
+    .panel { border: 1px solid #aaa; padding: 6px; display: flex; gap: 4px; align-items: flex-start; }
+    .panel-params { min-width: 80px; color: #333; white-space: pre; line-height: 1.8; font-size: 11px; }
+    .panel-buttons { display: flex; flex-direction: column; gap: 3px; }
+    .panel-buttons button {
+      font-family: monospace; font-size: 11px;
+      padding: 2px 8px; border: 1px solid #888;
+      background: #f0f0f0; cursor: pointer; white-space: nowrap;
+    }
+    .panel-buttons button:disabled { color: #aaa; border-color: #ccc; background: #f8f8f8; cursor: default; }
+    .panel-buttons button:hover:not(:disabled) { background: #ddd; }
+    .panel-buttons-h { display: flex; flex-direction: row; gap: 3px; margin-bottom: 4px; }
+    .panel-buttons-h button {
+      font-family: monospace; font-size: 11px;
+      padding: 2px 8px; border: 1px solid #888;
+      background: #f0f0f0; cursor: pointer;
+    }
+    .panel-buttons-h button:disabled { color: #aaa; border-color: #ccc; background: #f8f8f8; cursor: default; }
+    .panel-buttons-h button:hover:not(:disabled) { background: #ddd; }
+    textarea { font-family: monospace; font-size: 11px; border: 1px solid #aaa; resize: none; padding: 2px; }
+    textarea.editable { background: #fffff0; }
+    textarea.error { border-color: #cc0000 !important; background: #fff0f0 !important; }
+    canvas { border: 1px solid #aaa; display: block; }
+    .wipe-row { display: flex; gap: 4px; align-items: center; margin: 4px 0; }
+    .wipe-row button { font-family: monospace; font-size: 11px; padding: 2px 8px; border: 1px solid #888; background: #f0f0f0; cursor: pointer; }
+    .wipe-box { width: 50px; height: 20px; border: 1px solid #aaa; background: #fff; display: inline-block; }
+    .panel4 { border: 1px solid #aaa; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+    .panel4-top { display: flex; gap: 4px; align-items: flex-start; }
+    .err-msg { color: #cc0000; font-size: 10px; min-height: 14px; margin-top: 2px; }
+    .ok-msg { color: #006600; font-size: 10px; min-height: 14px; margin-top: 2px; }
+    .progress-container { display: flex; flex-direction: column; gap: 3px; justify-content: center; }
+    .progress-bar-wrap { width: 180px; height: 16px; border: 1px solid #aaa; background: #fff; overflow: hidden; }
+    .progress-bar-fill { height: 100%; width: 0%; background: #4488ff; transition: none; }
+    .legend { display: flex; gap: 3px; margin-top: 4px; font-size: 10px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 2px; }
+    .legend-box { width: 12px; height: 12px; border: 1px solid #aaa; }
+  </style>
+</head>
+<body>
+
+<div class="page-title">Gravity &amp; Bouguer Anomaly Calculator</div>
+<div class="subtitle">Bayu Tri Bhaskara | 20224002 | AMDAL Baseline Geophysics Tool v1.1</div>
+
+<div class="panels-row">
+
+  <!-- PANEL 1: INPUT GRAVITY DATA -->
+  <div class="panel">
+    <div class="panel-params">SEPC ;
+FORMAT:
+ID;lat;lon
+ ;elev;gobs
+
+Units:
+lat  : deg
+lon  : deg
+elev : m
+gobs : mGal</div>
+    <div class="panel-buttons">
+      <button onclick="wipe1()">wipe-1</button>
+      <button onclick="data1()">data-1</button>
+      <button id="btn-read1" onclick="read1()" disabled>read-1</button>
+      <button id="btn-exec1" onclick="exec1()" disabled>exec-1</button>
+    </div>
+    <div>
+      <textarea id="txa1" class="editable" rows="13" cols="32"
+        placeholder="ID;latitude;longitude;elevation;g_obs
+e.g.:
+STA-01;-6.9175;107.6191;120.5;978011.205"></textarea>
+      <div class="err-msg" id="err1"></div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: CORRECTIONS TABLE -->
+  <div class="panel">
+    <div class="panel-params">DENSITY
+ 2670
+ kg/m³
+
+GRS80
+ellipsoid
+
+FA  free-air
+B   Bouguer
+ABS anomaly</div>
+    <div class="panel-buttons">
+      <button onclick="wipe2()">wipe-2</button>
+      <button id="btn-data2" onclick="data2()" disabled>data-2</button>
+      <button id="btn-read2" onclick="read2()" disabled>read-2</button>
+      <button id="btn-exec2" onclick="exec2()" disabled>exec-2</button>
+    </div>
+    <div>
+      <textarea id="txa2" rows="13" cols="50" readonly
+        placeholder="Correction results will appear here after exec-2..."></textarea>
+      <div class="ok-msg" id="ok2"></div>
+    </div>
+  </div>
+
+  <!-- PANEL 5: PROCESS STATUS -->
+  <div class="panel">
+    <div class="panel-buttons">
+      <button id="btn-scan"   onclick="p5run('scan',  'bar1')">scan</button>
+      <button id="btn-filter" onclick="p5run('filter','bar2')">filter</button>
+      <button id="btn-format" onclick="p5run('format','bar3')">format</button>
+      <button id="btn-sort"   onclick="p5run('sort',  'bar4')">sort</button>
+      <button id="btn-erase"  onclick="p5run('erase', 'bar5')">erase</button>
+    </div>
+    <div class="progress-container">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="bar1"></div></div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="bar2"></div></div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="bar3"></div></div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="bar4"></div></div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="bar5"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- WIPE ROW -->
+<div class="wipe-row">
+  <button onclick="wipeAll()">wipe</button>
+  <span class="wipe-box"></span><span class="wipe-box"></span>
+  <span class="wipe-box"></span><span class="wipe-box"></span>
+  <span class="wipe-box"></span>
+</div>
+
+<!-- ROW 2: PANEL 3 HEATMAP -->
+<div class="panels-row">
+  <div class="panel">
+    <div class="panel-params" id="params3">XMIN —
+YMIN —
+XMAX —
+YMAX —
+
+bright=high
+dark=low
+
+● start
+● end</div>
+    <div class="panel-buttons">
+      <button onclick="wipe3()">wipe-3</button>
+      <button id="btn-data3" onclick="data3()" disabled>data-3</button>
+      <button id="btn-read3" onclick="read3()" disabled>read-3</button>
+      <button id="btn-exec3" onclick="exec3()" disabled>exec-3</button>
+    </div>
+    <div>
+      <canvas id="canvas3" width="270" height="200"></canvas>
+      <div id="legend3" class="legend"></div>
+      <div class="ok-msg" id="ok3"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 4: DEM TERRAIN -->
+<div class="panel4">
+  <div class="panel4-top">
+    <div class="panel-params" id="params4"># DEM
+FORMAT:
+lat;lon;elev
+
+Same coord
+system as
+panel 1
+
+Dots = 
+stations
+colored by
+anomaly</div>
+    <div>
+      <textarea id="txa4" class="editable" rows="10" cols="36"
+        placeholder="lat;lon;elevation (meters)
+e.g.:
+-6.9175;107.6191;120.5
+-6.9180;107.6195;135.2
+...
+Use same lat/lon area as panel 1"></textarea>
+      <div class="err-msg" id="err4"></div>
+    </div>
+  </div>
+  <div class="panel-buttons-h">
+    <button onclick="wipe4()">wipe</button>
+    <button onclick="data4()">data</button>
+    <button id="btn-read4" onclick="read4()" disabled>read</button>
+    <button id="btn-exec4" onclick="exec4()" disabled>exec</button>
+    <button onclick="none4()">none</button>
+    <button onclick="info4()">info</button>
+  </div>
+  <canvas id="canvas4" width="400" height="300"></canvas>
+  <div class="ok-msg" id="ok4"></div>
+</div>
+
+<script>
+  const RHO  = 2670;
+  const G    = 6.674e-11;
+  const UNUM = 10;
+  const PALETTE = [
+    "#330000","#550000","#770000","#880000","#992222",
+    "#aa3333","#cc4444","#dd5555","#ee7777","#ff9999"
+  ];
+  const DEM_PALETTE = [
+    "#888888","#996644","#aa7755","#bb8844","#ccaa55",
+    "#ddbb66","#eebb77","#ffcc88","#ffddaa","#ffeecc"
+  ];
+
+  let stations = [];
+  let results  = [];
+  let demPts   = [];  // {lat, lon, elev}
+
+  // ---- PHYSICS ----
+  function normalGravity(latDeg) {
+    const phi  = latDeg * Math.PI / 180;
+    const sin2 = Math.sin(phi) ** 2;
+    return 978032.67714 * (1 + 0.00193185138639 * sin2) /
+           Math.sqrt(1 - 0.00669437999014 * sin2);
+  }
+  function freeAir(h)  { return 0.3086 * h; }
+  function bouguer(h)  { return 2 * Math.PI * G * RHO * h * 1e5; }
+
+  // ---- HELPERS ----
+  function en(id, val) { document.getElementById(id).disabled = !val; }
+  function setText(id, t) { document.getElementById(id).textContent = t; }
+  function clearCanvas(id) {
+    const c = document.getElementById(id);
+    c.getContext("2d").clearRect(0, 0, c.width, c.height);
+  }
+  function setErr(id, msg) { document.getElementById(id).textContent = msg; }
+  function setOk(id, msg)  { document.getElementById(id).textContent = msg; }
+
+  // ---- VALIDATION ----
+  function validateP1() {
+    const el  = document.getElementById("txa1");
+    const raw = el.value.trim();
+    el.classList.remove("error");
+    setErr("err1","");
+    if (!raw) { el.classList.add("error"); setErr("err1","Error: no data."); return false; }
+    const lines = raw.split("\n").filter(l => l.trim());
+    for (let i = 0; i < lines.length; i++) {
+      const p = lines[i].split(";");
+      if (p.length !== 5) { el.classList.add("error"); setErr("err1",`Row ${i+1}: need 5 columns.`); return false; }
+      const [id,lat,lon,elev,gobs] = p;
+      if (!id.trim())      { el.classList.add("error"); setErr("err1",`Row ${i+1}: ID empty.`); return false; }
+      if (isNaN(+lat)||+lat<-90||+lat>90) { el.classList.add("error"); setErr("err1",`Row ${i+1}: bad latitude "${lat}".`); return false; }
+      if (isNaN(+lon)||+lon<-180||+lon>180) { el.classList.add("error"); setErr("err1",`Row ${i+1}: bad longitude "${lon}".`); return false; }
+      if (isNaN(+elev)) { el.classList.add("error"); setErr("err1",`Row ${i+1}: elevation not a number.`); return false; }
+      if (isNaN(+gobs)) { el.classList.add("error"); setErr("err1",`Row ${i+1}: g_obs not a number.`); return false; }
+    }
+    return true;
+  }
+
+  function validateP4() {
+    const el  = document.getElementById("txa4");
+    const raw = el.value.trim();
+    el.classList.remove("error");
+    setErr("err4","");
+    if (!raw) { el.classList.add("error"); setErr("err4","Error: no DEM data."); return false; }
+    const lines = raw.split("\n").filter(l => l.trim());
+    for (let i = 0; i < lines.length; i++) {
+      const p = lines[i].split(";");
+      if (p.length !== 3 || p.some(v => isNaN(+v))) {
+        el.classList.add("error");
+        setErr("err4",`Row ${i+1}: expected lat;lon;elev, got "${lines[i]}".`);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // ---- PANEL 1 ----
+  function wipe1() {
+    document.getElementById("txa1").value = "";
+    document.getElementById("txa1").classList.remove("error");
+    document.getElementById("txa1").readOnly = false;
+    document.getElementById("txa1").classList.add("editable");
+    setErr("err1",""); stations = []; results = [];
+    en("btn-read1",false); en("btn-exec1",false);
+    en("btn-data2",false); en("btn-read2",false); en("btn-exec2",false);
+    en("btn-data3",false); en("btn-read3",false); en("btn-exec3",false);
+    document.getElementById("txa2").value = "";
+    setOk("ok2",""); clearCanvas("canvas3");
+    document.getElementById("legend3").innerHTML = "";
+    setOk("ok3","");
+    setText("params3","XMIN —\nYMIN —\nXMAX —\nYMAX —\n\nbright=high\ndark=low\n\n● start\n● end");
+  }
+
+  function data1() {
+    document.getElementById("txa1").value =
+`STA-01;-6.9175;107.6191;120.5;978011.205
+STA-02;-6.9180;107.6195;135.2;978009.487
+STA-03;-6.9185;107.6200;98.3;977995.312
+STA-04;-6.9190;107.6205;142.0;977988.100
+STA-05;-6.9195;107.6210;156.4;977975.398
+STA-06;-6.9200;107.6215;88.7;977998.543
+STA-07;-6.9205;107.6220;167.2;977962.871
+STA-08;-6.9210;107.6225;110.9;978005.234
+STA-09;-6.9215;107.6230;131.6;978001.665`;
+    document.getElementById("txa1").classList.remove("error");
+    setErr("err1","");
+    en("btn-read1", true);
+  }
+
+  function read1() {
+    if (!validateP1()) return;
+    const lines = document.getElementById("txa1").value.trim().split("\n").filter(l=>l.trim());
+    stations = lines.map(l => {
+      const [id,lat,lon,elev,gobs] = l.split(";");
+      return { id:id.trim(), lat:+lat, lon:+lon, elev:+elev, gobs:+gobs };
+    });
+    en("btn-exec1",true); en("btn-data2",true); en("btn-data3",true);
+    setErr("err1", `✓ ${stations.length} stations parsed.`);
+    document.getElementById("err1").style.color = "#006600";
+  }
+
+  function exec1() {
+    if (!stations.length) return;
+    document.getElementById("txa1").value = stations.map(s =>
+      `${s.id};${s.lat};${s.lon};${s.elev};${s.gobs}`).join("\n");
+    document.getElementById("txa1").readOnly = true;
+    document.getElementById("txa1").classList.remove("editable","error");
+  }
+
+  // ---- PANEL 2 ----
+  function wipe2() {
+    document.getElementById("txa2").value = "";
+    setOk("ok2",""); results = [];
+    en("btn-read2",false); en("btn-exec2",false);
+  }
+
+  function data2() {
+    if (!stations.length) { setOk("ok2","Run panel 1 first."); return; }
+    en("btn-read2", true);
+    setOk("ok2", `Ready to compute for ${stations.length} stations.`);
+  }
+
+  function read2() {
+    results = stations.map(s => {
+      const gamma = normalGravity(s.lat);
+      const fa    = freeAir(s.elev);
+      const b     = bouguer(s.elev);
+      const afa   = s.gobs - gamma + fa;
+      const abs_  = s.gobs - gamma + fa - b;
+      return { ...s, gamma, fa, b, afa, abs: abs_ };
+    });
+    en("btn-exec2", true);
+    setOk("ok2", `✓ Corrections computed for ${results.length} stations.`);
+  }
+
+  function exec2() {
+    if (!results.length) return;
+    const hdr = "ID       | γ (mGal)    | FA (mGal) | B (mGal) | AFA (mGal) | ABS (mGal)";
+    const sep = "-".repeat(hdr.length);
+    const rows = results.map(r =>
+      `${r.id.padEnd(8)} | ${r.gamma.toFixed(3).padStart(11)} | ${r.fa.toFixed(3).padStart(9)} | ${r.b.toFixed(3).padStart(8)} | ${r.afa.toFixed(3).padStart(10)} | ${r.abs.toFixed(3).padStart(10)}`
+    );
+    document.getElementById("txa2").value = [hdr, sep, ...rows].join("\n");
+    const absVals = results.map(r=>r.abs);
+    setOk("ok2", `ABS range: ${Math.min(...absVals).toFixed(3)} to ${Math.max(...absVals).toFixed(3)} mGal`);
+  }
+
+  // ---- PANEL 3 ----
+  function wipe3() {
+    clearCanvas("canvas3");
+    document.getElementById("legend3").innerHTML = "";
+    setOk("ok3","");
+    setText("params3","XMIN —\nYMIN —\nXMAX —\nYMAX —\n\nbright=high\ndark=low\n\n● start\n● end");
+    en("btn-read3",false); en("btn-exec3",false);
+  }
+
+  function data3() {
+    if (!results.length) { setOk("ok3","Run panel 2 first."); return; }
+    en("btn-read3", true);
+    setOk("ok3", `Ready: ${results.length} stations.`);
+  }
+
+  function read3() { en("btn-exec3", true); }
+
+  function exec3() {
+    if (!results.length) return;
+    const canvas = document.getElementById("canvas3");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const n = results.length;
+    const absVals = results.map(r => r.abs);
+    const amin = Math.min(...absVals), arange = Math.max(...absVals) - amin || 1;
+    const labelW = 60, barH = Math.floor(canvas.height / n);
+
+    results.forEach((r, i) => {
+      const norm = (r.abs - amin) / arange;
+      const idx  = Math.min(UNUM-1, Math.floor(norm * UNUM));
+      const barW = Math.floor(norm * (canvas.width - labelW - 50));
+
+      ctx.fillStyle = "#333";
+      ctx.font = "10px monospace";
+      ctx.fillText(r.id, 2, i * barH + barH - 3);
+
+      ctx.fillStyle = PALETTE[idx];
+      ctx.fillRect(labelW, i * barH + 1, barW, barH - 2);
+
+      ctx.fillStyle = "#000";
+      ctx.fillText(r.abs.toFixed(2), labelW + barW + 3, i * barH + barH - 3);
+    });
+
+    // start marker green, end marker blue
+    ctx.fillStyle = "#00cc00";
+    ctx.fillRect(labelW - 8, 1, 6, barH - 2);
+    ctx.fillStyle = "#4444ff";
+    ctx.fillRect(labelW - 8, (n-1)*barH+1, 6, barH-2);
+
+    const lats = results.map(r=>r.lat), lons = results.map(r=>r.lon);
+    setText("params3",
+      `XMIN ${Math.min(...lons).toFixed(4)}\nYMIN ${Math.min(...lats).toFixed(4)}\nXMAX ${Math.max(...lons).toFixed(4)}\nYMAX ${Math.max(...lats).toFixed(4)}\n\nAMIN ${Math.min(...absVals).toFixed(2)}\nAMAX ${Math.max(...absVals).toFixed(2)}\n\n● start\n● end`
+    );
+
+    // legend
+    const leg = document.getElementById("legend3");
+    leg.innerHTML = "";
+    PALETTE.forEach((c, i) => {
+      const item = document.createElement("div"); item.className = "legend-item";
+      const box  = document.createElement("div"); box.className = "legend-box"; box.style.background = c;
+      const lbl  = document.createElement("span");
+      lbl.textContent = (amin + (i/UNUM)*arange).toFixed(1);
+      item.appendChild(box); item.appendChild(lbl); leg.appendChild(item);
+    });
+    setOk("ok3", `✓ Anomaly profile drawn. ${n} stations.`);
+  }
+
+  // ---- PANEL 4 ----
+  function wipe4() {
+    document.getElementById("txa4").value = "";
+    document.getElementById("txa4").classList.remove("error");
+    document.getElementById("txa4").readOnly = false;
+    document.getElementById("txa4").classList.add("editable");
+    setErr("err4",""); setOk("ok4","");
+    clearCanvas("canvas4");
+    demPts = [];
+    en("btn-read4",false); en("btn-exec4",false);
+  }
+
+  function data4() {
+    // Generate DEM grid covering same area as station data
+    // Use station lat/lon range + some padding, create 5x5 grid
+    const latMin = -6.9220, latMax = -6.9170;
+    const lonMin = 107.6188, lonMax = 107.6235;
+    const rows = 8, cols = 9;
+    const lines = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const lat = latMin + (r / (rows-1)) * (latMax - latMin);
+        const lon = lonMin + (c / (cols-1)) * (lonMax - lonMin);
+        // elevation varies with sinusoidal pattern
+        const elev = Math.round(
+          120 + 50 * Math.sin(c * 0.8) + 30 * Math.cos(r * 0.7)
+        );
+        lines.push(`${lat.toFixed(4)};${lon.toFixed(4)};${elev}`);
+      }
+    }
+    document.getElementById("txa4").value = lines.join("\n");
+    document.getElementById("txa4").classList.remove("error");
+    setErr("err4","");
+    en("btn-read4", true);
+  }
+
+  function read4() {
+    if (!validateP4()) return;
+    const lines = document.getElementById("txa4").value.trim().split("\n").filter(l=>l.trim());
+    demPts = lines.map(l => {
+      const p = l.split(";");
+      return { lat: +p[0], lon: +p[1], elev: +p[2] };
+    });
+    const elevs = demPts.map(p=>p.elev);
+    setOk("ok4", `✓ DEM loaded: ${demPts.length} points | Elev: ${Math.min(...elevs)}–${Math.max(...elevs)} m`);
+    setErr("err4","");
+    en("btn-exec4", true);
+  }
+
+  function exec4() {
+    if (!demPts.length) { setOk("ok4","Error: run read first."); return; }
+    drawDEMwithStations();
+  }
+
+  function none4() { clearCanvas("canvas4"); }
+
+  function info4() {
+    if (!demPts.length) { setOk("ok4","No DEM loaded."); return; }
+    const lats = demPts.map(p=>p.lat), lons = demPts.map(p=>p.lon), elevs = demPts.map(p=>p.elev);
+    setOk("ok4",
+      `Points:${demPts.length} | Lat:${Math.min(...lats).toFixed(4)}–${Math.max(...lats).toFixed(4)} | Lon:${Math.min(...lons).toFixed(4)}–${Math.max(...lons).toFixed(4)} | Elev:${Math.min(...elevs)}–${Math.max(...elevs)}m`
+    );
+  }
+
+  function drawDEMwithStations() {
+    const canvas = document.getElementById("canvas4");
+    const ctx    = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Get DEM bounds
+    const lats = demPts.map(p=>p.lat), lons = demPts.map(p=>p.lon);
+    const latMin = Math.min(...lats), latMax = Math.max(...lats);
+    const lonMin = Math.min(...lons), lonMax = Math.max(...lons);
+    const latRange = latMax - latMin || 0.001;
+    const lonRange = lonMax - lonMin || 0.001;
+
+    // Get unique lat/lon for grid sizing
+    const uniqueLats = [...new Set(lats)].sort((a,b)=>a-b);
+    const uniqueLons = [...new Set(lons)].sort((a,b)=>a-b);
+    const nRows = uniqueLats.length, nCols = uniqueLons.length;
+    const cellW = Math.floor(canvas.width  / nCols);
+    const cellH = Math.floor(canvas.height / nRows);
+
+    // Elevation range for color
+    const elevs = demPts.map(p=>p.elev);
+    const eMin  = Math.min(...elevs), eRange = Math.max(...elevs) - eMin || 1;
+
+    // Draw DEM cells
+    demPts.forEach(pt => {
+      const ci   = uniqueLons.indexOf(pt.lon);
+      const ri   = uniqueLats.indexOf(pt.lat);
+      const norm = (pt.elev - eMin) / eRange;
+      const idx  = Math.min(9, Math.floor(norm * 10));
+      ctx.fillStyle = DEM_PALETTE[idx];
+      ctx.fillRect(ci * cellW, ri * cellH, cellW - 1, cellH - 1);
+    });
+
+    // Draw lat/lon axis labels
+    ctx.fillStyle = "#333";
+    ctx.font = "9px monospace";
+    ctx.fillText(latMax.toFixed(4), 2, 10);
+    ctx.fillText(latMin.toFixed(4), 2, canvas.height - 2);
+    ctx.fillText(lonMin.toFixed(4), 0, canvas.height - 12);
+    ctx.fillText(lonMax.toFixed(4), canvas.width - 65, canvas.height - 12);
+
+    // Overlay station dots using GPS coordinates
+    if (results.length > 0) {
+      const absVals = results.map(r=>r.abs);
+      const amin = Math.min(...absVals), arange = Math.max(...absVals) - amin || 1;
+
+      results.forEach((r, i) => {
+        // Map GPS coords to canvas pixels
+        const px = ((r.lon - lonMin) / lonRange) * (canvas.width  - cellW) + cellW/2;
+        const py = ((r.lat - latMin) / latRange) * (canvas.height - cellH) + cellH/2;
+
+        const norm = (r.abs - amin) / arange;
+        const idx  = Math.min(UNUM-1, Math.floor(norm * UNUM));
+
+        // draw dot
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = PALETTE[idx];
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // station label
+        ctx.fillStyle = "#000";
+        ctx.font = "9px monospace";
+        ctx.fillText(r.id, px + 7, py + 3);
+      });
+
+      // start = green ring, end = blue ring
+      const s = results[0];
+      const e = results[results.length-1];
+      [[s,"#00cc00"],[e,"#4444ff"]].forEach(([r,col]) => {
+        const px = ((r.lon - lonMin) / lonRange) * (canvas.width  - cellW) + cellW/2;
+        const py = ((r.lat - latMin) / latRange) * (canvas.height - cellH) + cellH/2;
+        ctx.beginPath();
+        ctx.arc(px, py, 8, 0, 2*Math.PI);
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+
+      setOk("ok4", `✓ Terrain + ${results.length} station anomalies overlaid.`);
+    } else {
+      setOk("ok4", `✓ Terrain drawn. Run panel 2 to overlay anomalies.`);
+    }
+  }
+
+  // ---- PANEL 5 ----
+  function p5run(name, barId) {
+    document.getElementById("btn-"+name).disabled = true;
+    const bar = document.getElementById(barId);
+    let pct = 0;
+    const iv = setInterval(() => {
+      pct += 2; bar.style.width = pct + "%";
+      if (pct >= 100) { bar.style.width = "100%"; clearInterval(iv); }
+    }, 20);
+  }
+
+  // ---- WIPE ALL ----
+  function wipeAll() { wipe1(); wipe2(); wipe3(); wipe4(); }
+</script>
+
+</body>
+</html>
